@@ -23,11 +23,17 @@ public class SocialAppVectorStoreConfig {
 
     @Resource
     private SocialAppDocumentLoader socialAppDocumentLoader;
+    @Resource
+    private MyKeyWordEnricher keyWordEnricher;
 
     @Bean
-    VectorStore socialAppVectorStore(EmbeddingModel dashscopeEmbeddingModel) {
+    VectorStore socialAppVectorStore(EmbeddingModel dashscopeEmbeddingModel, MyTokenSplitter myTokenSplitter) {
         SimpleVectorStore simpleVectorStore = SimpleVectorStore.builder(dashscopeEmbeddingModel).build();
         List<Document> documents = socialAppDocumentLoader.loadSocialApps();
+        // 自定义分割
+//        List<Document> splitDocuments = myTokenSplitter.splitDocuments(documents);
+        // 自定义元信息增强keyWordEnricher
+//        List<Document> enrichedDocuments = keyWordEnricher.enrichDocuments(documents);
         simpleVectorStore.add(documents);
         return simpleVectorStore;
     }

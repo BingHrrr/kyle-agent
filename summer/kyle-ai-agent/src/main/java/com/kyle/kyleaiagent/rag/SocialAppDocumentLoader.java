@@ -39,12 +39,14 @@ public class SocialAppDocumentLoader {
             for (Resource resource : resources) {
                 // 保留元信息
                 String filename = resource.getFilename();
+                String sequence = filename.substring(filename.length() - 7, filename.length() - 3);
                 // 设置markdown读取规则
                 MarkdownDocumentReaderConfig config = MarkdownDocumentReaderConfig.builder()
                         .withHorizontalRuleCreateDocument(true)
                         .withIncludeCodeBlock(false)
                         .withIncludeBlockquote(false)
                         .withAdditionalMetadata("filename", filename)
+                        .withAdditionalMetadata("sequence", sequence)
                         .build();
                 MarkdownDocumentReader reader = new MarkdownDocumentReader(resource, config);
                 allDocuments.addAll(reader.get());
