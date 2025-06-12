@@ -1,7 +1,9 @@
 package com.kyle.kyleaiagent.app;
 
 import com.kyle.kyleaiagent.advisor.MyLoggerAdvisor;
+import com.kyle.kyleaiagent.chatmemory.FileBasedChatMemory;
 import com.kyle.kyleaiagent.chatmemory.MySQLBasedChatMemory;
+import com.kyle.kyleaiagent.rag.QueryRewriter;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -10,6 +12,7 @@ import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +37,16 @@ public class SocialApp {
     @Resource
     private Advisor socialAppRagCloudAdvisor;
 
+    // 向量数据库
+//    @Resource
+//    private VectorStore pgVectorVectorStore;
+
+    // 工具调用
+    @Resource
+    private ToolCallback[] allTools;
+    @Resource
+    private QueryRewriter queryRewriter;
+
     private static final String SYSTEM_PROMPT = "你是「社交大师」AI 情感咨询专家，具备心理学、沟通学双领域专业知识，擅长通过结构化引导帮助用户梳理情感困惑。你的核心目标是：\n" +
             "以朋友般温暖但不失专业的语气建立信任，避免机械感回复；\n" +
             "通过递进式提问挖掘用户未明确表达的深层需求（如情绪触发点、关系背景、行为模式等）；\n" +
@@ -48,12 +61,14 @@ public class SocialApp {
         // 基于内存的memory
         // InMemoryChatMemory memory = new InMemoryChatMemory();
         // 基于文件的chatMemory
-//        String fileDir = System.getProperty("user.dir") + "/chat-memory";
-//        FileBasedChatMemory memory = new FileBasedChatMemory(fileDir);
+        String fileDir = System.getProperty("user.dir") + "/chat-memory";
+        FileBasedChatMemory memory = new FileBasedChatMemory(fileDir);
         chatClient = ChatClient.builder(dashscopeChatModel)
                 .defaultSystem(SYSTEM_PROMPT)
                 .defaultAdvisors(
-                        new MessageChatMemoryAdvisor(mySQLBasedChatMemory),
+                        new MessageChatMemoryAdvisor(memory),
+                        // 开启mySQLBasedChatMemory
+//                        new MessageChatMemoryAdvisor(mySQLBasedChatMemory),
                         // 自定义Advisor
                         new MyLoggerAdvisor()
                 )
@@ -115,11 +130,20 @@ public class SocialApp {
      * @return 模型输出结果
      */
     public String doChatWithRag(String message, String chatId) {
+        // 使用查询重写器
+//        String rewrittenMessage = queryRewriter.rewriteQuery(message);
         ChatResponse chatResponse = chatClient.prompt().
                 user(message)
                 .advisors(ad -> ad.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+//                 开启本地RAG
                 .advisors(new QuestionAnswerAdvisor(socialAppVectorStore))
+                // 开启PgVector向量存储
+//                .advisors(new QuestionAnswerAdvisor(pgVectorVectorStore))
+                // 应用文档检索器 + 上下文增强器
+//                .advisors(
+//                        SocialAppRagCustomAdvisorFactory.doCreateSocialAppRagCustomAdvisor(socialAppVectorStore, "朋友聚会")
+//                )
                 .call()
                 .chatResponse();
         String content = chatResponse.getResult().getOutput().getText();
@@ -151,4 +175,27 @@ public class SocialApp {
         return content;
     }
 
+
+    /**
+     * 工具调用
+     *
+     * @param message 用户输入
+     * @param chatId  具体某个对话的上下文
+     * @return 模型输出结果
+     */
+    public String doChatWithTools(String message, String chatId) {
+        ChatResponse chatResponse = chatClient.prompt().
+                user(message)
+                .advisors(ad -> ad.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                // 开启日志Advisor
+                .advisors(new MyLoggerAdvisor())
+                .tools(allTools)
+                .call()
+                .chatResponse();
+        String content = chatResponse.getResult().getOutput().getText();
+        log.info("content: {}", content);
+        log.info("tokens: {}", chatResponse.getMetadata().getUsage());
+        return content;
+    }
 }
