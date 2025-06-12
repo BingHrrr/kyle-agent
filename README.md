@@ -2,5 +2,7 @@
 
 - Prompt ✔️
 - Advisor ✔️
-- RAG
+- RAG ✔️
+- Tool Calling ✔️
 - MCP
+- Agent
