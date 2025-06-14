@@ -86,4 +86,16 @@ class SocialAppTest {
         Assertions.assertNotNull(answer);
     }
 
+    @Test
+    void doChatWithMcp() {
+            String chatId = UUID.randomUUID().toString();
+            // 测试地图 MCP
+//            String message = "我的好朋友居住在上海静安区，请帮我找到 5 公里内合适的约会地点";
+//            String answer =  socialApp.doChatWithMcp(message, chatId);
+//            Assertions.assertNotNull(answer);
+        // 测试引入自己开发的MCP
+        String message = "请给我搜索一些小狗相关的图片";
+        String answer = socialApp.doChatWithMcp(message, chatId);
+        Assertions.assertNotNull(answer);
+    }
 }
