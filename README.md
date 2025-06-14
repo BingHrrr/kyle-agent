@@ -4,5 +4,5 @@
 - Advisor ✔️
 - RAG ✔️
 - Tool Calling ✔️
-- MCP
+- MCP（Stdio + SSE） ✔️
 - Agent
