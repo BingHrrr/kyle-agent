@@ -15,6 +15,11 @@ public class ToolRegistration {
     @Value("${search-api.api-key}")
     private String searchApiKey;
 
+    @Value("${email.from-email}")
+    private String fromEmail;
+
+    @Value("${email.auth-password}")
+    private String password;
     /**
      * 使用
      * 注册器模式（集中注册和管理Tool）
@@ -29,13 +34,17 @@ public class ToolRegistration {
         ResourceDownloadTool resourceDownloadTool = new ResourceDownloadTool();
         TerminalOperationTool terminalOperationTool = new TerminalOperationTool();
         PDFGenerationTool pdfGenerationTool = new PDFGenerationTool();
+        EmailSendingTool emailSendingTool = new EmailSendingTool(fromEmail, password);
+        TerminateTool terminateTool = new TerminateTool();
         return ToolCallbacks.from(
                 fileOperationTool,
                 webSearchTool,
                 webScrapingTool,
                 resourceDownloadTool,
                 terminalOperationTool,
-                pdfGenerationTool
+                pdfGenerationTool,
+                emailSendingTool,
+                terminateTool
         );
     }
 
