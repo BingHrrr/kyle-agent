@@ -13,9 +13,9 @@ import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.tool.ToolCallback;
-import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -100,6 +100,21 @@ public class SocialApp {
 
     record SocialReport(String title, List<String> suggestions) {
 
+    }
+    /**
+     * 基础对话 （支持流式调用）
+     *
+     * @param message 用户输入
+     * @param chatId  具体某个对话的上下文
+     * @return 流式输出模型输出结果
+     */
+    public Flux<String> doChatWithStream(String message, String chatId) {
+        return chatClient.prompt().
+                user(message)
+                .advisors(ad -> ad.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+                .stream()
+                .content();
     }
 
     /**
@@ -200,8 +215,8 @@ public class SocialApp {
         return content;
     }
 
-    @Resource
-    private ToolCallbackProvider toolCallbackProvider;
+//    @Resource
+//    private ToolCallbackProvider toolCallbackProvider;
     /**
      * MCP调用
      *
@@ -209,19 +224,19 @@ public class SocialApp {
      * @param chatId  具体某个对话的上下文
      * @return 模型输出结果
      */
-    public String doChatWithMcp(String message, String chatId) {
-        ChatResponse chatResponse = chatClient.prompt().
-                user(message)
-                .advisors(ad -> ad.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
-                // 开启日志Advisor
-                .advisors(new MyLoggerAdvisor())
-                .tools(toolCallbackProvider)
-                .call()
-                .chatResponse();
-        String content = chatResponse.getResult().getOutput().getText();
-        log.info("content: {}", content);
-        log.info("tokens: {}", chatResponse.getMetadata().getUsage());
-        return content;
-    }
+//    public String doChatWithMcp(String message, String chatId) {
+//        ChatResponse chatResponse = chatClient.prompt().
+//                user(message)
+//                .advisors(ad -> ad.param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+//                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10))
+//                // 开启日志Advisor
+//                .advisors(new MyLoggerAdvisor())
+//                .tools(toolCallbackProvider)
+//                .call()
+//                .chatResponse();
+//        String content = chatResponse.getResult().getOutput().getText();
+//        log.info("content: {}", content);
+//        log.info("tokens: {}", chatResponse.getMetadata().getUsage());
+//        return content;
+//    }
 }

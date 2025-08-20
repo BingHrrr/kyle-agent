@@ -13,7 +13,11 @@ import reactor.core.publisher.Flux;
 @Slf4j
 public class MyLoggerAdvisor implements CallAroundAdvisor, StreamAroundAdvisor {
 
-    private int order;
+    private final int order = 100;
+
+    public MyLoggerAdvisor() {
+
+    }
 
     @Override
     public String getName() {
@@ -22,11 +26,12 @@ public class MyLoggerAdvisor implements CallAroundAdvisor, StreamAroundAdvisor {
 
     /**
      * getOrder方法，定义Advisor的优先级，越低优先级越高
+     *
      * @return 优先级
      */
     @Override
     public int getOrder() {
-        return 100;
+        return this.order;
     }
 
     private AdvisedRequest before(AdvisedRequest request) {

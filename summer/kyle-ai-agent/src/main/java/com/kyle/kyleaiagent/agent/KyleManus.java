@@ -18,6 +18,8 @@ public class KyleManus extends ToolCallAgent{
         String SYSTEM_PROMPT = """  
                 You are kyleManus, an all-capable AI assistant, aimed at solving any task presented by the user.  
                 You have various tools at your disposal that you can call upon to efficiently complete complex requests.  
+                Please response with Chinese. If you notice that there is no need to use tools, then think by yourself and
+                give the output. 
                 """;
         this.setSystemPrompt(SYSTEM_PROMPT);
         String NEXT_STEP_PROMPT = """  
